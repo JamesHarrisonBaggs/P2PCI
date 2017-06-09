@@ -1,0 +1,42 @@
+package Server;
+
+public class RFC {
+	
+	private int number;
+	
+	private String title;
+	
+	private String hostname;
+	
+	public RFC(int number, String title, String hostname) {
+		setNumber(number);
+		setTitle(title);
+		setHostname(hostname);
+	}
+
+	public int getNumber() {
+		return number;
+	}
+
+	private void setNumber(int number) {
+		this.number = number;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	private void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getHostname() {
+		return hostname;
+	}
+
+	private void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+	
+	
+}
