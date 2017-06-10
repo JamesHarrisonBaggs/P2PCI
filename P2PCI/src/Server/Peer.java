@@ -1,6 +1,56 @@
 package Server;
 
+
+import java.io.*;
+import java.net.*;
+
 public class Peer {
+	
+	public static void main(String[] args){
+		// Modified example socket program from http://www.javaworld.com/article/2077322/core-java/core-java-sockets-programming-in-java-a-tutorial.html
+		
+
+		// Declare the Socket and its in/out handles
+		Socket echoSocket = null;
+		BufferedReader in = null;
+		DataOutputStream out = null;
+		try {
+			
+			// InetAddress.getByName(null) gets loopback address. Port 7734.
+			echoSocket = new Socket(InetAddress.getByName(null), 7734);
+			in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
+			out = new DataOutputStream(echoSocket.getOutputStream());
+
+			
+		} catch (UnknownHostException e) {
+            System.err.println("Don't know about host: hostname");
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection to: hostname");
+        }
+		
+		// If the socket is created, write Hello world, and wait for the echo. 
+		if (echoSocket != null && out != null && in != null) {
+			try {
+				out.writeBytes("Hello World!\n");
+				String responseLine;
+				while((responseLine = in.readLine()) != null){
+					System.out.println(responseLine);
+					if(responseLine.indexOf("Hello World!") != -1){
+						System.out.println("Finished echoing!");
+						break;
+					}
+				}
+				
+				out.close();
+				in.close();
+				echoSocket.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		
+		}
+	}
 	
 	private String hostname;
 	
