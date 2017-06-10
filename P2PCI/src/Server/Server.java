@@ -41,8 +41,8 @@ public class Server {
 				line = in.readLine();
 				System.out.println(line);
 				out.println(line);
-				if(line.indexOf("Hello World!") != -1){
-					break;
+				if(line.indexOf("Hello World! 10") != -1){
+					clientSocket = echoServer.accept();
 				}
 			}
 			
