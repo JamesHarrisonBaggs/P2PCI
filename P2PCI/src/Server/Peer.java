@@ -49,41 +49,4 @@ public class Peer {
 
 		}
 	}
-
-	private String hostname;
-
-	private int port;
-	
-	private LinkedList<RFC> RFCs;
-
-	public Peer(String hostname, int port, LinkedList<RFC> RFCs) {
-		setHostname(hostname);
-		setPort(port);
-		setRFCs(RFCs);
-		
-	}
-
-	public String getHostname() {
-		return hostname;
-	}
-
-	private void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	private void setPort(int port) {
-		this.port = port;
-	}
-
-	public LinkedList<RFC> getRFCs() {
-		return RFCs;
-	}
-
-	public void setRFCs(LinkedList<RFC> rFCs) {
-		RFCs = rFCs;
-	}
 }
