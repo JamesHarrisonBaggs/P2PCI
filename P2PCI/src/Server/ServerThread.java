@@ -35,53 +35,60 @@ public class ServerThread extends Thread {
 			System.out.println("IO Exception " + e);
 		}
 		
-		String line;
 		try {
 			while (true) {
-				line = br.readLine();
-				Scanner sc = new Scanner(line);
+				String command = "";
+				String line;
+				while (!(line = br.readLine()).isEmpty()) {
+					//System.out.println(line);
+					command += line + "\n";
+				}
+				System.out.println(command);
+				Scanner sc = new Scanner(command);
 				String method = sc.next();
 				sc.close();
 				if (method.equals("ADD")) {
 					RFC rfc = new RFC();
 					try {
-						rfc = add(line);
+						rfc = add(command);
 					} catch (InputMismatchException e) {
-						out.println(version + " 400 Bad Request");
+						out.println(version + " 400 Bad Request\n");
 					} catch (IllegalArgumentException e) {
-						out.println(version + " 505 P2P-CI Version Not Supported");
+						out.println(version + " 505 P2P-CI Version Not Supported\n");
 					}
 					out.println(version + "200 OK");
-					out.println(rfc.toString());
+					out.println(rfc.toString() + "\n");
 				} else if (method.equals("LOOKUP")) {
 					LinkedList<RFC> results = new LinkedList<RFC>();
 					try {
-						results = find(line);
+						results = find(command);
 					} catch (InputMismatchException e) {
-						out.println(version + " 400 Bad Request");
+						out.println(version + " 400 Bad Request\n");
 					} catch (IllegalArgumentException e) {
-						out.println(version + " 505 P2P-CI Version Not Supported");
+						out.println(version + " 505 P2P-CI Version Not Supported\n");
 					}
 					if (results.size() == 0) {
-						out.println(version + " 404 Not Found");
+						out.println(version + " 404 Not Found\n");
 					}
 					ListIterator<RFC> iterator = results.listIterator();
 					out.println(version + "200 OK");
 					while(iterator.hasNext()) {
 						out.println(iterator.next().toString());
 					}
+					out.println("\n");
 				} else if (method.equals("LIST")) {
 					LinkedList<RFC> all = new LinkedList<RFC>();
 					try {
-						all = list(line);
+						all = list(command);
 					} catch (IllegalArgumentException e) {
-						out.println(version + " 505 P2P-CI Version Not Supported");
+						out.println(version + " 505 P2P-CI Version Not Supported\n");
 					}
 					ListIterator<RFC> iterator = all.listIterator();
 					out.println(version + "200 OK");
 					while(iterator.hasNext()) {
 						out.println(iterator.next().toString());
 					}
+					out.println("\n");
 				} else if (method.equals("QUIT")) {
 					int port = sc.nextInt();
 					//UPort p = new UPort(hostname, clientPort);

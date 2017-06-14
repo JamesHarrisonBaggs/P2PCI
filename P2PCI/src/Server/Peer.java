@@ -2,69 +2,11 @@ package Server;
 
 import java.io.*;
 import java.net.*;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 public class Peer {
 
 	public static void main(String[] args) throws InterruptedException {
-		File workingDir = new File("./");
-		File[] list1 = workingDir.listFiles();
-		String[] list2 = workingDir.list();
-		
-		for(String s: list2 ){
-			System.out.println(s);
-		}
-		
-		for(File f: list1){
-			System.out.println(f.getName());
-		}
-	}
-		
-	
-	public static ServerSocket getServerSocket() throws InterruptedException{
-		ServerSocket uSocket = null;
-		try {
-			uSocket = new ServerSocket(7735);
-		} catch (IOException e) {
-			System.out.println("Exception thrown");
-			e.printStackTrace();
-		}
-		Thread.sleep(10000);
-		
-		return uSocket;
-	}
-
-	public static void directoryTestExample() {
-		// Directory Creation and Deletion Example
-
-		File path = new File("./peer31");
-		boolean success = (path.mkdirs());
-		if (success) {
-			System.out.println("Directory created");
-			System.out.println("Press \"ENTER\" to continue...");
-			Scanner scanner = new Scanner(System.in);
-			scanner.nextLine();
-			scanner.close();
-
-			try {
-				success = deleteRecursive(path);
-			} catch (FileNotFoundException e) {
-				System.out.println("Problem deletingRecursively: " + e);
-			}
-
-			if (success) {
-				System.out.println("Success Deleting Directory");
-			} else {
-				System.out.println("Directory not delted.");
-			}
-
-		} else {
-			System.out.println("Directory not created");
-		}
-	}
-
-	public static void socketsTestExample() throws InterruptedException {
 		// Modified example socket program from
 		// http://www.javaworld.com/article/2077322/core-java/core-java-sockets-programming-in-java-a-tutorial.html
 
@@ -88,14 +30,52 @@ public class Peer {
 		// If the socket is created, write Hello world, and wait for the echo.
 		if (echoSocket != null && out != null && in != null) {
 			try {
-				for (int i = 0; i <= 10; i++) {
-					out.writeBytes("Hello World! " + i + "\n");
+				File folder = new File("peerA");
+				File[] files = folder.listFiles();
+				for (int i = 0; i < files.length; i++) {
+					if (files[i].isFile()) {
+						int number = Integer.parseInt(files[i].getName().replaceAll("[^0-9]", ""));
+						String title = getTitle(number);
+						out.writeBytes("ADD RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n\n");
+						String responseLine = "";
+						String line;
+						while (!(line = in.readLine()).isEmpty()) {
+							responseLine += line + "\n";
+						}
+						System.out.println(responseLine);
+					}
+					
+				}
+				while(true) {
+					Scanner command = new Scanner(System.in);
+					//String input = command.nextLine();
+					if (command.next().equalsIgnoreCase("lookup")) {
+						int number = command.nextInt();
+						String title = getTitle(number);
+						out.writeBytes("LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n\n");
+					} else if (command.next().equalsIgnoreCase("listall")) {
+						out.writeBytes("LIST ALL P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n\n");
+					} else if (command.next().equalsIgnoreCase("quit")) {
+						out.writeBytes("QUIT P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n\n");
+						command.close();
+						break;
+					} else {
+						System.out.println("Wrong command, try again.");
+					}
 					String responseLine;
 					if ((responseLine = in.readLine()) != null) {
 						System.out.println(responseLine);
 					}
 					Thread.sleep(1000);
 				}
+				/*for (int i = 0; i <= 10; i++) {
+					out.writeBytes("Hello World! " + i + "\n");
+					String responseLine;
+					if ((responseLine = in.readLine()) != null) {
+						System.out.println(responseLine);
+					}
+					Thread.sleep(1000);
+				}*/
 
 				out.close();
 				in.close();
@@ -106,21 +86,26 @@ public class Peer {
 			}
 
 		}
-
 	}
-
-	// Taken verbatim (with a minor change) from Paulitex's recursive directory
-	// deletion solution on
-	// https://stackoverflow.com/questions/779519/delete-directories-recursively-in-java
-	public static boolean deleteRecursive(File path) throws FileNotFoundException {
-		if (!path.exists())
-			throw new FileNotFoundException(path.getAbsolutePath());
-		boolean ret = true;
-		if (path.isDirectory()) {
-			for (File f : path.listFiles()) {
-				ret = ret && deleteRecursive(f);
+	
+	public static String getTitle(int number) throws FileNotFoundException, InputMismatchException {
+		String title = "";
+		Scanner ts = new Scanner(new File("Test/rfc-index.txt"));
+		while (ts.hasNextLine()) {
+			Scanner ls = new Scanner(ts.nextLine());
+			int index = 0;
+			try {
+				index = ls.nextInt();
+			} catch (NoSuchElementException e) {
+				continue;
 			}
+			if (index == number) {
+				title = ls.nextLine().split("\\.")[0].trim();
+				break;
+			}
+			ls.close();
 		}
-		return ret && path.delete();
+		ts.close();
+		return title;
 	}
 }

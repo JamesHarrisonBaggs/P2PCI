@@ -29,7 +29,11 @@ public class Server {
 		
 		// Wait/Accept an incoming connection
 		try { 
-			clientSocket = echoServer.accept();
+			while(true) {
+				clientSocket = echoServer.accept();
+				new ServerThread(clientSocket).run();
+			}
+			/*clientSocket = echoServer.accept();
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			out = new PrintStream(clientSocket.getOutputStream());
 			
@@ -41,7 +45,7 @@ public class Server {
 				if(line.indexOf("Hello World! 10") != -1){
 					clientSocket = echoServer.accept();
 				}
-			}
+			}*/
 			
 		} catch (IOException e) {
 			e.printStackTrace();
