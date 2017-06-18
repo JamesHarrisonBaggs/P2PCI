@@ -41,60 +41,22 @@ public class LinkedList<E> extends AbstractList<E> {
 		return temp.data;
 	}
 	
-	public boolean find(E data) {
-		if (data == null) {
-			throw new NullPointerException();
+	public void delete(int index) {
+		
+		if (index < 0 || index > size - 1) {
+			throw new IndexOutOfBoundsException();
 		}
 		
-		if(size == 0){
-			return false;
-		}
-		
-		if (front.data == data) {
-			return true;
-		}
-		
-		Node<E> temp = front.next;
-		
-		while (temp.next != null) {
-			if (temp.data == data) {
-				return true;
-			} else {
-				temp = temp.next;
-			}
-		}
-		
-		if (temp.next == null && temp.data == data) return true;
-		return false;
-	}
-	
-	public void delete(E data) {
-		
-		if (data == null) {
-			throw new NullPointerException();
-		}
-		
-		if (data == front.data) {
+		Node<E> temp = front;
+		if (index == 0) {
 			front = front.next;
-			size--;
-		}
-		Node<E> prev = front;
-		Node<E> temp = front.next;
-		
-		while (temp.next != null) {
-			if (temp.data == data) {
-				prev.next = temp.next;
-				size--;
-			} else {
-				prev = prev.next;
+		} else {
+			for (int i = 0; i < index - 1; i++) {
 				temp = temp.next;
 			}
+			temp.next = temp.next.next;
 		}
-		
-		if (temp.next == null && data == temp.data) {
-			prev.next = null;
-			size--;
-		}
+		size--;
 	}
 	
 	@Override
