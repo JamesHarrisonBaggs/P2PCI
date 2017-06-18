@@ -5,7 +5,7 @@ import java.net.*;
 import java.util.*;
 
 // Modified from example at https://stackoverflow.com/questions/10131377/socket-programming-multiple-client-to-one-server
-public class ServerThread extends Thread {
+public class ServerThread implements Runnable {
 	protected Socket socket;
 	
 	protected int clientPort;
@@ -165,12 +165,11 @@ public class ServerThread extends Thread {
 		forth.close();
 		sc.close();
 		UPort p = new UPort(hostname, port);
-		if (Server.ports.size() == 0) Server.ports.addFirst(p);
-		for (int i = 0; i < Server.ports.size(); i++) {
-			if (!p.getHostname().equals(Server.ports.get(i).getHostname())) {
-				Server.ports.addFirst(p);
-			}
+		
+		if (!Server.ports.find(p)) {
+			Server.ports.addFirst(p);
 		}
+	
 		RFC rfc = new RFC(number, title, hostname);
 		Server.RFCs.addFirst(rfc);
 		return rfc;

@@ -46,6 +46,10 @@ public class LinkedList<E> extends AbstractList<E> {
 			throw new NullPointerException();
 		}
 		
+		if(size == 0){
+			return false;
+		}
+		
 		if (front.data == data) {
 			return true;
 		}

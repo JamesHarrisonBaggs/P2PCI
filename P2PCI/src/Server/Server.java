@@ -23,11 +23,15 @@ public class Server {
 			e.printStackTrace();
 		}
 		
+		System.out.println("Server Started!");
 		// Wait/Accept an incoming connection
 		try { 
 			while(true) {
+				System.out.println("Waiting for connections...");
 				clientSocket = echoServer.accept();
-				new ServerThread(clientSocket).run();
+				Runnable serverThread = new ServerThread(clientSocket);
+				new Thread(serverThread).start();
+				clientSocket= null;
 			}			
 		} catch (IOException e) {
 			e.printStackTrace();
