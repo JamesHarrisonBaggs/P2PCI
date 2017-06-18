@@ -13,14 +13,16 @@ public class Peer {
 		// Declare the Socket and its in/out handles
 		Socket echoSocket = null;
 		BufferedReader in = null;
-		DataOutputStream out = null;
+		PrintStream out = null;
 		try {
 
 			// InetAddress.getByName(null) gets loopback address. Port 7734.
 			echoSocket = new Socket(InetAddress.getByName(null), 7734);
 			in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
-			out = new DataOutputStream(echoSocket.getOutputStream());
+			out = new PrintStream(echoSocket.getOutputStream());
 
+			// create a new thread for upload port probably here
+			
 		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host: hostname");
 		} catch (IOException e) {
@@ -30,53 +32,50 @@ public class Peer {
 		// If the socket is created, write Hello world, and wait for the echo.
 		if (echoSocket != null && out != null && in != null) {
 			try {
-				File folder = new File("peerA");
+				File folder = new File("peer");
 				File[] files = folder.listFiles();
 				for (int i = 0; i < files.length; i++) {
 					if (files[i].isFile()) {
 						int number = Integer.parseInt(files[i].getName().replaceAll("[^0-9]", ""));
 						String title = getTitle(number);
-						out.writeBytes("ADD RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n\n");
+						out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n");
 						String responseLine = "";
-						String line;
-						while (!(line = in.readLine()).isEmpty()) {
+						for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
 							responseLine += line + "\n";
 						}
 						System.out.println(responseLine);
 					}
 					
 				}
+				Scanner command = new Scanner(System.in);
 				while(true) {
-					Scanner command = new Scanner(System.in);
-					//String input = command.nextLine();
-					if (command.next().equalsIgnoreCase("lookup")) {
-						int number = command.nextInt();
+					System.out.print("Wait for input: ");
+					String input = command.nextLine();
+					input = input.replaceAll("([\\n\\r]+\\s*)*$", "").toLowerCase();
+					System.out.println(input);
+					if (input.startsWith("lookup")) {
+						int number = Integer.parseInt(input.split(" ")[1]);
 						String title = getTitle(number);
-						out.writeBytes("LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n\n");
-					} else if (command.next().equalsIgnoreCase("listall")) {
-						out.writeBytes("LIST ALL P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n\n");
-					} else if (command.next().equalsIgnoreCase("quit")) {
-						out.writeBytes("QUIT P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n\n");
-						command.close();
+						out.println("LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\nTitle: " + title + "\n");
+					} else if (input.startsWith("listall")) {
+						out.println("LIST ALL P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n");
+					} else if (input.startsWith("quit")) {
+						out.println("QUIT P2P-CI/1.0\nHost: " + echoSocket.getLocalSocketAddress() + "\nPort: " + echoSocket.getPort() + "\n");
 						break;
+					} else if (input.startsWith("get")) {
+						//communicate with another peer to get a rfc file here probably
 					} else {
 						System.out.println("Wrong command, try again.");
+						continue;
 					}
-					String responseLine;
-					if ((responseLine = in.readLine()) != null) {
-						System.out.println(responseLine);
+					String responseLine = "";
+					for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
+						responseLine += line + "\n";
 					}
-					Thread.sleep(1000);
+					System.out.println(responseLine);
+					//Thread.sleep(1000);
 				}
-				/*for (int i = 0; i <= 10; i++) {
-					out.writeBytes("Hello World! " + i + "\n");
-					String responseLine;
-					if ((responseLine = in.readLine()) != null) {
-						System.out.println(responseLine);
-					}
-					Thread.sleep(1000);
-				}*/
-
+				command.close();
 				out.close();
 				in.close();
 				echoSocket.close();

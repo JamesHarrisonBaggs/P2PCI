@@ -26,4 +26,8 @@ public class UPort {
 	private void setPort(int port) {
 		this.port = port;
 	}
+	
+	public String toString() {
+		return hostname + " " + port;
+	}
 }

@@ -1,4 +1,0 @@
-LOOKUP RFC 3457 P2P-CI/1.0
-Host: thishost.csc.ncsu.edu
-Port: 5678
-Title: Requirements for IPsec Remote Access Scenarios 
