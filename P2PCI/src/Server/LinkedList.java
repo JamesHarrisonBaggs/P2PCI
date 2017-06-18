@@ -41,6 +41,29 @@ public class LinkedList<E> extends AbstractList<E> {
 		return temp.data;
 	}
 	
+	public boolean find(E data) {
+		if (data == null) {
+			throw new NullPointerException();
+		}
+		
+		if (front.data == data) {
+			return true;
+		}
+		
+		Node<E> temp = front.next;
+		
+		while (temp.next != null) {
+			if (temp.data == data) {
+				return true;
+			} else {
+				temp = temp.next;
+			}
+		}
+		
+		if (temp.next == null && temp.data == data) return true;
+		return false;
+	}
+	
 	public void delete(E data) {
 		
 		if (data == null) {
