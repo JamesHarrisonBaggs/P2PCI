@@ -32,6 +32,7 @@ public class Server {
 				Runnable serverThread = new ServerThread(clientSocket);
 				new Thread(serverThread).start();
 				clientSocket= null;
+				
 			}			
 		} catch (IOException e) {
 			e.printStackTrace();
