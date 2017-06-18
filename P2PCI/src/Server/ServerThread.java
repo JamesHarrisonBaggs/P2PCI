@@ -110,20 +110,23 @@ public class ServerThread implements Runnable {
 					out.println();
 				} else if (method.equals("QUIT")) {
 					UPort p = quit(command);
-					ListIterator<RFC> iterator = Server.RFCs.listIterator();
-					for (int i = 0; i < Server.RFCs.size(); i++) {
-						RFC rfc = Server.RFCs.get(i);
-						if (rfc.getHostname().equals(p.getHostname())) {
-							Server.RFCs.delete(rfc);
+					int i = 0;
+					do {
+						for(i = 0; i < Server.RFCs.size(); i++) {
+							if (Server.RFCs.get(i).getHostname().equals(p.getHostname())) {
+								Server.RFCs.delete(i);
+								break;
+							}
 						}
-					}
-					while (iterator.hasNext()) {
-						RFC rfc = iterator.next();
-						if (rfc.getHostname() == p.getHostname()) {
-							Server.RFCs.remove(rfc);
+					} while (Server.RFCs.size() != i);
+					do {
+						for(i = 0; i < Server.ports.size(); i++) {
+							if (Server.ports.get(i).getHostname().equals(p.getHostname())) {
+								Server.ports.delete(i);
+								break;
+							}
 						}
-					}
-					Server.ports.remove(p);
+					} while (Server.ports.size() != i);
 					socket.close();
 					return;
 				}
@@ -165,16 +168,25 @@ public class ServerThread implements Runnable {
 		forth.close();
 		sc.close();
 		UPort p = new UPort(hostname, port);
-		
-		if (!Server.ports.find(p)) {
-			Server.ports.addFirst(p);
-		}
-	
+		addPort(p);
 		RFC rfc = new RFC(number, title, hostname);
 		Server.RFCs.addFirst(rfc);
 		return rfc;
 	}
 	
+	private void addPort(UPort p) {
+		if (Server.ports.size() == 0) {
+			Server.ports.addFirst(p);
+			return;
+		}
+		for (int i = 0; i < Server.ports.size(); i++) {
+			if (Server.ports.get(i).getHostname().equals(p.getHostname())) {
+				return;
+			}
+		}
+		Server.ports.addFirst(p);
+	}
+
 	public LinkedList<RFC> find(String msg) {
 		Scanner sc = new Scanner(msg);
 		Scanner first = new Scanner(sc.nextLine());
