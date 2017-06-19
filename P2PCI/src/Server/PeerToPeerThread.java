@@ -19,8 +19,8 @@ class PeerToPeerThread implements Runnable {
 		InputStream in = null;
 		BufferedReader br = null;
 		PrintStream out = null;
-		FileOutputStream fos = null;
-		BufferedOutputStream bos = null;
+		InputStream is = null;
+		OutputStream os = null;
 		
 		try {
 			in = socket.getInputStream();
@@ -43,7 +43,7 @@ class PeerToPeerThread implements Runnable {
 				if (method.equals("GET")) {
 					String fileName;
 					try {
-						fileName = get(command);
+						fileName = "peer/" + get(command);
 					} catch (InputMismatchException e) {
 						out.println(version + " 400 Bad Request\n");
 						socket.close();
@@ -60,8 +60,8 @@ class PeerToPeerThread implements Runnable {
 					}
 					out.println(version + "200 OK");
 					SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-					long lastModified = new File("peer/" + fileName).lastModified();
-					long length = new File("peer/" + fileName).length();
+					long lastModified = new File(fileName).lastModified();
+					long length = new File(fileName).length();
 					out.println("Date: " + date.format(new Date()));
 					out.println("OS: " + System.getProperty("os.name"));
 					out.println("Last-Modified: " + date.format(new Date(lastModified)));
@@ -69,6 +69,19 @@ class PeerToPeerThread implements Runnable {
 					out.println("Content-Type: text/text");
 					out.println();
 					
+					File f = new File(fileName);
+					byte[] bytes = new byte[16 * 1024];
+					in = new FileInputStream(f);
+					os = socket.getOutputStream();
+					int count;
+			        while ((count = in.read(bytes)) > 0) {
+			            out.write(bytes, 0, count);
+			        }
+
+			        os.close();
+			        in.close();
+			        socket.close();
+			        
 				} else {
 					
 				}
