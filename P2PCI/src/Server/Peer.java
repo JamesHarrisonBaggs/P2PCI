@@ -123,7 +123,7 @@ public class Peer {
 				
 				BufferedReader peerIn = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
 				PrintStream peerOut = new PrintStream(socketToPeer.getOutputStream());
-				OutputStream fileOut = new FileOutputStream(new File("peer2/rfc" + RFCNumber + ".txt"));
+				OutputStream fileOut = new FileOutputStream(new File("peer/rfc" + RFCNumber + ".txt"));
 				peerOut.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
 				peerOut.println("Host: " + peerHostname);
 				peerOut.println("OS: " + System.getProperty("os.name"));
@@ -140,8 +140,13 @@ public class Peer {
 				byte[] bytes = new byte[16*1024];
 
 		        int count;
+		        int mega = 0;
 		        while ((count = pin2.read(bytes)) >= 0) {
 		            fileOut.write(bytes, 0, count);
+		            if(mega == 0){
+		            	System.out.println(bytes);
+		            	mega++;
+		            }
 		        }
 		        
 		        System.out.println("File Retrieved!\n");
