@@ -34,8 +34,10 @@ public class Peer {
 			}
 		}
 		
+		
+		
 		// Send Upload Port to the Server
-		//registerUploadPort();
+		registerUploadPort();
 		
 		// Start the Peer to Server thread (for handling peer console commands)
 			// uploadRFCIndexes();
@@ -87,13 +89,13 @@ public class Peer {
 				int number = Integer.parseInt(input.split(" ")[1]);
 				String title = getTitle(number);
 				out.println(
-						"LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + uploadPort.getInetAddress()
+						"LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + socketToServer.getInetAddress()
 								+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 			} else if (input.startsWith("listall")) {
-				out.println("LIST ALL P2P-CI/1.0\nHost: " + uploadPort.getInetAddress() + "\nPort: "
+				out.println("LIST ALL P2P-CI/1.0\nHost: " + socketToServer.getInetAddress() + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 			} else if (input.startsWith("quit")) {
-				out.println("QUIT P2P-CI/1.0\nHost: " + uploadPort.getInetAddress() + "\nPort: "
+				out.println("QUIT P2P-CI/1.0\nHost: " + socketToServer.getInetAddress() + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 				break;
 			} else if (input.startsWith("get")) {
@@ -107,9 +109,7 @@ public class Peer {
 			for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
 				responseLine += line + "\n";
 			}
-			System.out.println("Server Response: ------------");
 			System.out.println(responseLine);
-			System.out.println("End of Server Response --------");
 		}
 	}
 
@@ -137,6 +137,7 @@ public class Peer {
 		System.out.println("------------------------");
 	}
 	
+	//Redundant method. Any message (such as 
 	private static void registerUploadPort() {
 		System.out.println("Registering P2P Upload Port...");
 		
@@ -150,16 +151,14 @@ public class Peer {
 			if (files[i].isFile()) {
 				int number = Integer.parseInt(files[i].getName().replaceAll("[^0-9]", ""));
 				String title = getTitle(number);
-				out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + socketToServer.getLocalSocketAddress()
-						+ "\nPort: " + socketToServer.getPort() + "\nTitle: " + title + "\n");
+				out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + socketToServer.getInetAddress()
+						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 				String responseLine = "";
 				for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
 					responseLine += line + "\n";
 				}
 
-				System.out.println("Server Response: \n-------------------");
 				System.out.println(responseLine);
-				System.out.println("End of Server Response\n------------------");
 			}
 
 		}
