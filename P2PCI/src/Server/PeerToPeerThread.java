@@ -51,41 +51,41 @@ class PeerToPeerThread implements Runnable {
 				if (fileName.isEmpty()) {
 					out.println(version + " 404 Not Found\n");
 					socket.close();
-					run();
+				} else {
+					fileName = "peer/" + fileName;
+					out.println(version + " 200 OK");
+					SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+					long lastModified = new File(fileName).lastModified();
+					long length = new File(fileName).length();
+					out.println("Date: " + date.format(new Date()));
+					out.println("OS: " + System.getProperty("os.name"));
+					out.println("Last-Modified: " + date.format(new Date(lastModified)));
+					out.println("Content-Length: " + length);
+					out.println("Content-Type: text/text");
+					out.println();
+	
+					Thread.sleep(2000);
+					
+					File f = new File(fileName);
+					InputStream is = new FileInputStream(f);
+					OutputStream os = socket.getOutputStream();
+					
+					byte[] bytes = new byte[16 * 1024];
+					int count;
+					while ((count = is.read(bytes)) >= 0) {
+						os.write(bytes, 0, count);
+					}
+					
+					
+					os.close();
+					is.close();
+	
+					out.close();
+					socket.close();
 				}
-				fileName = "peer/" + fileName;
-				out.println(version + " 200 OK");
-				SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-				long lastModified = new File(fileName).lastModified();
-				long length = new File(fileName).length();
-				out.println("Date: " + date.format(new Date()));
-				out.println("OS: " + System.getProperty("os.name"));
-				out.println("Last-Modified: " + date.format(new Date(lastModified)));
-				out.println("Content-Length: " + length);
-				out.println("Content-Type: text/text");
-				out.println();
-
-				Thread.sleep(2000);
-				
-				File f = new File(fileName);
-				InputStream is = new FileInputStream(f);
-				OutputStream os = socket.getOutputStream();
-				
-				byte[] bytes = new byte[16 * 1024];
-				int count;
-				while ((count = is.read(bytes)) >= 0) {
-					os.write(bytes, 0, count);
-				}
-				
-				
-				os.close();
-				is.close();
-
-				out.close();
-				socket.close();
-
 			} else {
-
+				out.println(version + " 400 Bad Request\n");
+				socket.close();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
