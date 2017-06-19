@@ -2,7 +2,15 @@ package Server;
 
 import java.io.*;
 import java.net.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Peer {
 
@@ -14,9 +22,9 @@ public class Peer {
 	private static String inetAddress;
 	private static Socket p2pSocket;
 	private static boolean done = false;
+	private static SecretKeySpec secretKey;
 	
-	public static void main(String[] args) throws InterruptedException {
-
+	public static void main(String[] args) throws InterruptedException, IOException {
 		// Open the Console Scanner, And Peer Upload Socket
 		console = new Scanner(System.in);
 		try {
@@ -24,27 +32,25 @@ public class Peer {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
-
 		// Connect to the server
 		connectToServer();
 		
-
-		// Authenticate with the server (Username, password)
-		int authStatus;
-		while((authStatus = authenticate()) != 1){
-			if(authStatus == -1){
-				break;
-			}
+		System.out.println("Please enter username and password to gain acess (username password): ");
+		String login[] = console.nextLine().split(" ");
+		String username = login[0];
+		String password = login[1];
+		secretKey = new SecretKey().getKey();
+		String encoded = encode(password);
+		out.println("LOGIN " + username + " " + encoded + "\n");
+		
+		String responseLine = "";
+		for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
+			responseLine += line + "\n";
 		}
+		System.out.println(responseLine);
+		if (responseLine.trim().equals("Invalid User")) {socketToServer.close();  System.exit(0);}
 		
-		
-		
-		// Send Upload Port to the Server
-		registerUploadPort();
-		
-
-		if (socketToServer != null && out != null && in != null && authStatus == 1 && uploadPort != null) {
+		if (socketToServer != null && out != null && in != null && uploadPort != null) {
 			try {
 				uploadRFCIndexes();
 
@@ -56,16 +62,10 @@ public class Peer {
 					Runnable p2pThread = new PeerToPeerThread(p2pSocket);
 					new Thread(p2pThread).start();
 				}
-				
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
-			
 		}
-		
-		
 		
 		// Close everything
 		try {
@@ -78,11 +78,20 @@ public class Peer {
 		}
 	}
 	
-	// Returns 1 if authenticated, 0 if not authenticated, -1 if quit command
-	private static int authenticate() {
-		return 1;
+	//example from http://aesencryption.net/
+	private static String encode(String password) {
+		Cipher cipher;
+		String encoded = "";
+		try {
+			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+	        encoded = Base64.getEncoder().encodeToString(cipher.doFinal(password.getBytes("UTF-8")));
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return encoded;
 	}
-
 
 	public static void handleConsoleCommands() throws IOException{
 		while (true) {
@@ -120,17 +129,13 @@ public class Peer {
 				peerOut.println("OS: " + System.getProperty("os.name"));
 				peerOut.println();
 				
-				
-				
 				//TODO this just echoes first 6 lines of p2p file transfer (maybe handle potential errors?)
 				String responseLine = "";
 				for (String line = peerIn.readLine(); !line.isEmpty(); line = peerIn.readLine()) {
 					responseLine += line + "\n";
 				}
 				System.out.println(responseLine);
-				
-				
-				// 
+				 
 				InputStream pin2 = socketToPeer.getInputStream();
 				byte[] bytes = new byte[16*1024];
 
@@ -139,8 +144,6 @@ public class Peer {
 		            fileOut.write(bytes, 0, count);
 		        }
 		        
-		        
-				
 		        System.out.println("File Retrieved!\n");
 		        
 				peerIn.close();
@@ -151,8 +154,7 @@ public class Peer {
 				
 				out.println("ADD RFC " + RFCNumber + " P2P-CI/1.0\nHost: " + inetAddress
 						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + getTitle(RFCNumber) + "\n");
-				
-				
+
 			} else {
 				System.out.println("Wrong command, try again.");
 				continue;
@@ -169,16 +171,12 @@ public class Peer {
 	private static void connectToServer() {
 		String hostname = null;
 		try {
-
 			System.out.println("Enter Server's IP address (assumes port 7734. Enter 127.0.0.1 for loopback address:");
 			hostname = console.nextLine();
 			// InetAddress.getByName(null) gets loopback address. Port 7734.
 			socketToServer = new Socket(hostname, 7734);
 			in = new BufferedReader(new InputStreamReader(socketToServer.getInputStream()));
 			out = new PrintStream(socketToServer.getOutputStream());
-
-			// create a new thread for upload port probably here
-
 		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host:" + hostname);
 		} catch (IOException e) {
@@ -189,13 +187,6 @@ public class Peer {
 
 		System.out.println("Connected to Server!");
 		System.out.println("------------------------");
-	}
-	
-	//Redundant method. Any message (such as 
-	private static void registerUploadPort() {
-		System.out.println("Registering P2P Upload Port...");
-		
-		System.out.println("Upload Port Successfully Registered with Centralized Index");
 	}
 
 	private static void uploadRFCIndexes() throws IOException {
@@ -211,10 +202,8 @@ public class Peer {
 				for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
 					responseLine += line + "\n";
 				}
-
 				System.out.println(responseLine);
 			}
-
 		}
 	}
 

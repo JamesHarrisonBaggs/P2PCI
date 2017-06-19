@@ -18,24 +18,12 @@ public class ServerThread implements Runnable {
 	
 	protected String version;
 	
-	protected String theKey = "yx31nyb071dj98s";
-	
-	protected static SecretKeySpec secretKey;
-
-	protected static byte[] key;
+	public SecretKeySpec secretKey;
 	
 	public ServerThread(Socket clientSocket) {
 		this.socket = clientSocket;
 		version = "P2P-CI/1.0";
-		
-		//example from http://aesencryption.net/
-		try {
-			key = MessageDigest.getInstance("SHA-1").digest(theKey.getBytes("UTF-8"));
-			key = Arrays.copyOf(key, 16);
-			secretKey = new SecretKeySpec(key, "AES");
-		} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+		secretKey = new SecretKey().getKey();
 	}
 
 	public void run() {
@@ -175,6 +163,7 @@ public class ServerThread implements Runnable {
 		}	
 	}
 
+	//example from http://aesencryption.net/
 	private boolean login(String msg) throws FileNotFoundException {
 		Scanner sc = new Scanner(msg);
 		Scanner first = new Scanner(sc.nextLine());
@@ -193,7 +182,7 @@ public class ServerThread implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Scanner fs = new Scanner(new File("/Test/logins.txt"));
+		Scanner fs = new Scanner(new File("Test/logins.txt"));
 		while(fs.hasNextLine()) {
 			Scanner ls = new Scanner(fs.nextLine());
 			if (user.equals(ls.next()) && decoded.equals(ls.next())) {
