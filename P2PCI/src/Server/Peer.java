@@ -23,6 +23,7 @@ public class Peer {
 	private static Socket p2pSocket;
 	private static boolean done = false;
 	private static SecretKeySpec secretKey;
+	private static String version = "P2P-CI/1.0";
 	
 	public static void main(String[] args) throws InterruptedException, IOException {
 		// Open the Console Scanner, And Peer Upload Socket
@@ -103,13 +104,13 @@ public class Peer {
 				int number = Integer.parseInt(input.split(" ")[1]);
 				String title = getTitle(number);
 				out.println(
-						"LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + inetAddress
+						"LOOKUP RFC " + number + " " + version + "\nHost: " + inetAddress
 								+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 			} else if (input.startsWith("listall")) {
-				out.println("LIST ALL P2P-CI/1.0\nHost: " + inetAddress + "\nPort: "
+				out.println("LIST ALL " + version + "\nHost: " + inetAddress + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 			} else if (input.startsWith("quit")) {
-				out.println("QUIT P2P-CI/1.0\nHost: " + inetAddress + "\nPort: "
+				out.println("QUIT " + version + "\nHost: " + inetAddress + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 				done = true;
 				System.exit(0);
@@ -125,7 +126,7 @@ public class Peer {
 				PrintStream peerOut = new PrintStream(socketToPeer.getOutputStream());
 				OutputStream fileOut = new FileOutputStream(new File("peer/rfc" + RFCNumber + ".txt"));
 				InputStream pin2 = socketToPeer.getInputStream();
-				peerOut.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
+				peerOut.println("GET RFC " + RFCNumber + " " + version);
 				peerOut.println("Host: " + peerHostname);
 				peerOut.println("OS: " + System.getProperty("os.name"));
 				peerOut.println();
@@ -152,7 +153,7 @@ public class Peer {
 				fileOut.close();
 				socketToPeer.close();
 				
-				out.println("ADD RFC " + RFCNumber + " P2P-CI/1.0\nHost: " + inetAddress
+				out.println("ADD RFC " + RFCNumber + " " + version + "\nHost: " + inetAddress
 						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + getTitle(RFCNumber) + "\n");
 
 			} else {
@@ -196,7 +197,7 @@ public class Peer {
 			if (files[i].isFile()) {
 				int number = Integer.parseInt(files[i].getName().replaceAll("[^0-9]", ""));
 				String title = getTitle(number);
-				out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + inetAddress
+				out.println("ADD RFC " + number + " " + version + "\nHost: " + inetAddress
 						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 				String responseLine = "";
 				for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
