@@ -51,6 +51,7 @@ class PeerToPeerThread implements Runnable {
 				if (fileName.isEmpty()) {
 					out.println(version + " 404 Not Found\n");
 					socket.close();
+					run();
 				}
 				fileName = "peer/" + fileName;
 				out.println(version + " 200 OK");
