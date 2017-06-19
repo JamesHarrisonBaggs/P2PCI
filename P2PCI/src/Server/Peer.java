@@ -124,6 +124,7 @@ public class Peer {
 				BufferedReader peerIn = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
 				PrintStream peerOut = new PrintStream(socketToPeer.getOutputStream());
 				OutputStream fileOut = new FileOutputStream(new File("peer/rfc" + RFCNumber + ".txt"));
+				InputStream pin2 = socketToPeer.getInputStream();
 				peerOut.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
 				peerOut.println("Host: " + peerHostname);
 				peerOut.println("OS: " + System.getProperty("os.name"));
@@ -136,7 +137,6 @@ public class Peer {
 				}
 				System.out.println(responseLine);
 				 
-				InputStream pin2 = socketToPeer.getInputStream();
 				byte[] bytes = new byte[16*1024];
 
 		        int count;
