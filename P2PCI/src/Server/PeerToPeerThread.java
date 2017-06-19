@@ -40,7 +40,7 @@ class PeerToPeerThread implements Runnable {
 			if (method.equals("GET")) {
 				String fileName = null;
 				try {
-					fileName = "peer/" + get(command);
+					fileName = get(command);
 				} catch (InputMismatchException e) {
 					out.println(version + " 400 Bad Request\n");
 					socket.close();
@@ -52,8 +52,8 @@ class PeerToPeerThread implements Runnable {
 					out.println(version + " 404 Not Found\n");
 					socket.close();
 				}
-				
-				out.println(version + "200 OK");
+				fileName = "peer/" + fileName;
+				out.println(version + " 200 OK");
 				SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
 				long lastModified = new File(fileName).lastModified();
 				long length = new File(fileName).length();
