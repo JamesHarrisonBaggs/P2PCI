@@ -124,10 +124,19 @@ public class Peer {
 				System.exit(0);
 				break;
 			} else if (input.startsWith("get")) {
-				
-				int RFCNumber = Integer.parseInt(input.split(" ")[1]);
-				String peerHostname = input.split(" ")[2];
-				int peerUPort = Integer.parseInt(input.split(" ")[3]);
+				int RFCNumber = 0;
+				String peerHostname = "";
+				int peerUPort = 0;
+				try {
+					RFCNumber = Integer.parseInt(input.split(" ")[1]);
+					peerHostname = input.split(" ")[2];
+					peerUPort = Integer.parseInt(input.split(" ")[3]);
+				} catch (Exception e) {
+					System.out.println(version + " 400 Bad Request");
+					System.out.println("Try again.");
+					System.out.println();
+					continue;
+				}
 				Socket socketToPeer = new Socket(peerHostname, peerUPort);
 				
 				BufferedReader peerIn = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
