@@ -28,11 +28,11 @@ public class ServerThread implements Runnable {
 
 	public void run() {
 		
-		
 		InputStream in = null;
 		BufferedReader br = null;
 		PrintStream out = null;
-
+		
+		//open socket to read message
 		try {
 			in = socket.getInputStream();
 			br = new BufferedReader(new InputStreamReader(in));
@@ -42,6 +42,9 @@ public class ServerThread implements Runnable {
 			System.out.println("IO Exception " + e);
 		}
 		
+		System.out.println("Wait for user to login.");
+		
+		// loop to read different message
 		try {
 			while (true) {
 				String command = "";
@@ -52,7 +55,8 @@ public class ServerThread implements Runnable {
 				Scanner sc = new Scanner(command);
 				String method = sc.next();
 				sc.close();
-				if (method.equals("LOGIN")) {
+				
+				if (method.equals("LOGIN")) { // check if it is a valid user
 					if (login(command)) {
 						out.println("User authenticated\n");
 					} else {
@@ -60,7 +64,7 @@ public class ServerThread implements Runnable {
 						socket.close();
 						return;
 					}
-				} else if (method.equals("ADD")) {
+				} else if (method.equals("ADD")) { // receive rfc info
 					RFC rfc = new RFC();
 					try {
 						rfc = add(command);
@@ -71,7 +75,7 @@ public class ServerThread implements Runnable {
 						out.println(version + " 505 P2P-CI Version Not Supported\n");
 						continue;
 					}
-					out.println(version + "200 OK");
+					out.println(version + " 200 OK");
 					int port = 0;
 					for (int i = 0; i < Server.ports.size(); i++) {
 						UPort p = Server.ports.get(i);
@@ -80,7 +84,7 @@ public class ServerThread implements Runnable {
 						}
 					}
 					out.println(rfc.toString() + " " + port + "\n");
-				} else if (method.equals("LOOKUP")) {
+				} else if (method.equals("LOOKUP")) { // check if rfc is existd in the system
 					LinkedList<RFC> results = new LinkedList<RFC>();
 					try {
 						results = find(command);
@@ -95,7 +99,7 @@ public class ServerThread implements Runnable {
 						out.println(version + " 404 Not Found\n");
 						continue;
 					}
-					out.println(version + "200 OK");
+					out.println(version + " 200 OK");
 					int port = 0;
 					for (int i = 0; i < results.size(); i++) {
 						RFC rfc = results.get(i);
@@ -108,7 +112,7 @@ public class ServerThread implements Runnable {
 						out.println(rfc.toString() + " " + port);
 					}
 					out.println();
-				} else if (method.equals("LIST")) {
+				} else if (method.equals("LIST")) { //list all rfcs availables
 					LinkedList<RFC> all = new LinkedList<RFC>();
 					try {
 						all = list(command);
@@ -134,7 +138,7 @@ public class ServerThread implements Runnable {
 						out.println(rfc.toString() + " " + port);
 					}
 					out.println();
-				} else if (method.equals("QUIT")) {
+				} else if (method.equals("QUIT")) { // peer exit
 					UPort p = quit(command);
 					int i = 0;
 					do {

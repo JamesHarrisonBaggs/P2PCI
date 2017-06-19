@@ -52,10 +52,6 @@ class PeerToPeerThread implements Runnable {
 					out.println(version + " 404 Not Found\n");
 					socket.close();
 				}
-
-				File f = new File(fileName);
-				InputStream is = new FileInputStream(f);
-				OutputStream os = socket.getOutputStream();
 				
 				out.println(version + "200 OK");
 				SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
@@ -68,6 +64,11 @@ class PeerToPeerThread implements Runnable {
 				out.println("Content-Type: text/text");
 				out.println();
 
+				Thread.sleep(2000);
+				
+				File f = new File(fileName);
+				InputStream is = new FileInputStream(f);
+				OutputStream os = socket.getOutputStream();
 				
 				byte[] bytes = new byte[16 * 1024];
 				int count;
