@@ -68,13 +68,8 @@ class PeerToPeerThread implements Runnable {
 				InputStream is = new FileInputStream(f);
 				OutputStream os = socket.getOutputStream();
 				int count;
-				int overallCount = 0;
 				while ((count = is.read(bytes)) >= 0) {
 					os.write(bytes, 0, count);
-					if(overallCount == 0){
-						System.out.println(bytes);
-						overallCount++;
-					}
 				}
 				
 				

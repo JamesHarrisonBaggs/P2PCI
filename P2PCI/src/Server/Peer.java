@@ -140,13 +140,8 @@ public class Peer {
 				byte[] bytes = new byte[16*1024];
 
 		        int count;
-		        int mega = 0;
 		        while ((count = pin2.read(bytes)) >= 0) {
 		            fileOut.write(bytes, 0, count);
-		            if(mega == 0){
-		            	System.out.println(bytes);
-		            	mega++;
-		            }
 		        }
 		        
 		        System.out.println("File Retrieved!\n");
