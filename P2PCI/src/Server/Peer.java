@@ -35,22 +35,26 @@ public class Peer {
 		}
 		// Connect to the server
 		connectToServer();
-		
-		System.out.println("Please enter username and password to gain acess (username password): ");
-		String login[] = console.nextLine().split(" ");
-		String username = login[0];
-		String password = login[1];
-		secretKey = new SecretKey().getKey();
-		String encoded = encode(password);
-		out.println("LOGIN " + username + " " + encoded + "\n");
-		
-		String responseLine = "";
-		for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
-			responseLine += line + "\n";
+		while(true) {
+			System.out.println("Please enter username and password to gain acess (username password): ");
+			String login[] = console.nextLine().split(" ");
+			String username = login[0];
+			String password = login[1];
+			secretKey = new SecretKey().getKey();
+			String encoded = encode(password);
+			out.println("LOGIN " + username + " " + encoded + "\n");
+			
+			String responseLine = "";
+			for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
+				responseLine += line + "\n";
+			}
+			System.out.println(responseLine);
+			if (responseLine.trim().equals("Invalid User")) {
+				System.out.println("Try Again.");
+				continue;
+			}
+			break;
 		}
-		System.out.println(responseLine);
-		if (responseLine.trim().equals("Invalid User")) {socketToServer.close();  System.exit(0);}
-		
 		if (socketToServer != null && out != null && in != null && uploadPort != null) {
 			try {
 				uploadRFCIndexes();

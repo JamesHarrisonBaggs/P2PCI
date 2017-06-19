@@ -61,8 +61,6 @@ public class ServerThread implements Runnable {
 						out.println("User authenticated\n");
 					} else {
 						out.println("Invalid User\n");
-						socket.close();
-						return;
 					}
 				} else if (method.equals("ADD")) { // receive rfc info
 					RFC rfc = new RFC();
