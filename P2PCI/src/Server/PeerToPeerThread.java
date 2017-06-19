@@ -6,90 +6,81 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 class PeerToPeerThread implements Runnable {
-	
+
 	private Socket socket;
-	
+
 	private String version = "P2P-CI/1.0";
-	
+
 	public PeerToPeerThread(Socket peerSocket) {
 		this.socket = peerSocket;
 	}
-	
+
 	public void run() {
-		InputStream in = null;
+
+		// Initialize Input and Output
 		BufferedReader br = null;
 		PrintStream out = null;
-		InputStream is = null;
-		OutputStream os = null;
-		
+
 		try {
-			in = socket.getInputStream();
-			br = new BufferedReader(new InputStreamReader(in));
+			br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintStream(socket.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		try {
-			while (true) {
-				String command = "";
-				for(String line = br.readLine(); !line.isEmpty(); line =br.readLine()) {
-					command += line.trim() + "\n";
+			String command = "";
+			for (String line = br.readLine(); !line.isEmpty(); line = br.readLine()) {
+				command += line.trim() + "\n";
+			}
+			System.out.println(command);
+			Scanner sc = new Scanner(command);
+			String method = sc.next();
+			sc.close();
+			if (method.equals("GET")) {
+				String fileName = null;
+				try {
+					fileName = "peer/" + get(command);
+				} catch (InputMismatchException e) {
+					out.println(version + " 400 Bad Request\n");
+					socket.close();
+				} catch (IllegalArgumentException e) {
+					out.println(version + " 505 P2P-CI Version Not Supported\n");
+					socket.close();
 				}
-				System.out.println(command);
-				Scanner sc = new Scanner(command);
-				String method = sc.next();
-				sc.close();
-				if (method.equals("GET")) {
-					String fileName;
-					try {
-						fileName = "peer/" + get(command);
-					} catch (InputMismatchException e) {
-						out.println(version + " 400 Bad Request\n");
-						socket.close();
-						break;
-					} catch (IllegalArgumentException e) {
-						out.println(version + " 505 P2P-CI Version Not Supported\n");
-						socket.close();
-						break;
-					}
-					if (fileName.isEmpty()) {
-						out.println(version + " 404 Not Found\n");
-						socket.close();
-						break;
-					}
-					out.println(version + "200 OK");
-					SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-					long lastModified = new File(fileName).lastModified();
-					long length = new File(fileName).length();
-					out.println("Date: " + date.format(new Date()));
-					out.println("OS: " + System.getProperty("os.name"));
-					out.println("Last-Modified: " + date.format(new Date(lastModified)));
-					out.println("Content-Length: " + length);
-					out.println("Content-Type: text/text");
-					out.println();
-					
-					File f = new File(fileName);
-					byte[] bytes = new byte[16 * 1024];
-					in = new FileInputStream(f);
-					os = socket.getOutputStream();
-					int count;
-			        while ((count = in.read(bytes)) > 0) {
-			            os.write(bytes, 0, count);
-			        }
-			        
-			        os.close();
-			        in.close();
-			        
-			        out.println("File sent");
-			        out.println();
-			        
-			        out.close();
-			        socket.close();
-			        
-				} else {
-					
+				if (fileName.isEmpty()) {
+					out.println(version + " 404 Not Found\n");
+					socket.close();
 				}
+				out.println(version + "200 OK");
+				SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+				long lastModified = new File(fileName).lastModified();
+				long length = new File(fileName).length();
+				out.println("Date: " + date.format(new Date()));
+				out.println("OS: " + System.getProperty("os.name"));
+				out.println("Last-Modified: " + date.format(new Date(lastModified)));
+				out.println("Content-Length: " + length);
+				out.println("Content-Type: text/text");
+				out.println();
+
+				File f = new File(fileName);
+				byte[] bytes = new byte[16 * 1024];
+				InputStream is = new FileInputStream(f);
+				OutputStream os = socket.getOutputStream();
+				int count;
+				while ((count = is.read(bytes)) >= 0) {
+					os.write(bytes, 0, count);
+				}
+				
+				
+				os.close();
+				is.close();
+
+				out.close();
+				socket.close();
+
+			} else {
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -113,11 +104,11 @@ class PeerToPeerThread implements Runnable {
 			throw new IllegalArgumentException();
 		}
 		first.close();
-		/*sc.nextLine();
-		Scanner third = new Scanner(sc.nextLine());
-		String OSLine = third.nextLine();
-		String OS = OSLine.split(" ", 2)[1];
-		third.close();*/
+		/*
+		 * sc.nextLine(); Scanner third = new Scanner(sc.nextLine()); String
+		 * OSLine = third.nextLine(); String OS = OSLine.split(" ", 2)[1];
+		 * third.close();
+		 */
 		sc.close();
 		File folder = new File("peer");
 		File[] files = folder.listFiles();

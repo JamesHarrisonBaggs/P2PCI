@@ -43,14 +43,6 @@ public class Peer {
 		// Send Upload Port to the Server
 		registerUploadPort();
 		
-		// uploadRFCIndexes();
-		// handleConsoleCommands();
-		// Listen for connections and start a new thread for each
-		
-			//Start p2pThread
-				//Transfer File
-			
-
 
 		if (socketToServer != null && out != null && in != null && authStatus == 1 && uploadPort != null) {
 			try {
@@ -111,25 +103,28 @@ public class Peer {
 				out.println("QUIT P2P-CI/1.0\nHost: " + inetAddress + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 				done = true;
+				System.exit(0);
 				break;
 			} else if (input.startsWith("get")) {
+				
 				int RFCNumber = Integer.parseInt(input.split(" ")[1]);
 				String peerHostname = input.split(" ")[2];
 				int peerUPort = Integer.parseInt(input.split(" ")[3]);
 				Socket socketToPeer = new Socket(peerHostname, peerUPort);
 				
-				BufferedReader pin = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
-				PrintStream pout = new PrintStream(socketToPeer.getOutputStream());
-				OutputStream fout = new FileOutputStream(new File("peer/rfc" + RFCNumber + ".txt"));
-				pout.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
-				pout.println("Host: " + peerHostname);
-				pout.println("OS: " + System.getProperty("os.name"));
+				BufferedReader peerIn = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
+				PrintStream peerOut = new PrintStream(socketToPeer.getOutputStream());
+				OutputStream fileOut = new FileOutputStream(new File("peer2/rfc" + RFCNumber + ".txt"));
+				peerOut.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
+				peerOut.println("Host: " + peerHostname);
+				peerOut.println("OS: " + System.getProperty("os.name"));
+				peerOut.println();
 				
 				
 				
 				//TODO this just echoes first 6 lines of p2p file transfer (maybe handle potential errors?)
 				String responseLine = "";
-				for (String line = pin.readLine(); !line.isEmpty(); line = pin.readLine()) {
+				for (String line = peerIn.readLine(); !line.isEmpty(); line = peerIn.readLine()) {
 					responseLine += line + "\n";
 				}
 				System.out.println(responseLine);
@@ -140,22 +135,22 @@ public class Peer {
 				byte[] bytes = new byte[16*1024];
 
 		        int count;
-		        while ((count = pin2.read(bytes)) > 0) {
-		            fout.write(bytes, 0, count);
+		        while ((count = pin2.read(bytes)) >= 0) {
+		            fileOut.write(bytes, 0, count);
 		        }
 		        
-		        pin2.close();
+		        
 				
-		        responseLine = "";
-				for (String line = pin.readLine(); !line.isEmpty(); line = pin.readLine()) {
-					responseLine += line + "\n";
-				}
-				System.out.println(responseLine);
-				pin.close();
-				
+		        System.out.println("File Retrieved!\n");
+		        
+				peerIn.close();
+				peerOut.close();
+				pin2.close();
+				fileOut.close();
 				socketToPeer.close();
-				fout.close();
 				
+				out.println("ADD RFC " + RFCNumber + " P2P-CI/1.0\nHost: " + inetAddress
+						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + getTitle(RFCNumber) + "\n");
 				
 				
 			} else {
