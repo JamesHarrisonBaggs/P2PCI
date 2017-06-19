@@ -1,4 +1,4 @@
-package Server;
+package p2p;
 
 import java.io.IOException;
 

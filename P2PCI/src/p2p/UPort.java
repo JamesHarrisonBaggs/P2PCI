@@ -1,4 +1,4 @@
-package Server;
+package p2p;
 
 public class UPort {
 	private String hostname;
