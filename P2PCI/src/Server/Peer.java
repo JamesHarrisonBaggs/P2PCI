@@ -11,7 +11,10 @@ public class Peer {
 	private static PrintStream out;
 	private static Scanner console;
 	private static ServerSocket uploadPort;
-
+	private static String inetAddress;
+	private static Socket p2pSocket;
+	private static boolean done = false;
+	
 	public static void main(String[] args) throws InterruptedException {
 
 		// Open the Console Scanner, And Peer Upload Socket
@@ -25,6 +28,7 @@ public class Peer {
 
 		// Connect to the server
 		connectToServer();
+		
 
 		// Authenticate with the server (Username, password)
 		int authStatus;
@@ -39,28 +43,37 @@ public class Peer {
 		// Send Upload Port to the Server
 		registerUploadPort();
 		
-		// Start the Peer to Server thread (for handling peer console commands)
-			// uploadRFCIndexes();
-			// handleConsoleCommands();
-		// Listen for connections
+		// uploadRFCIndexes();
+		// handleConsoleCommands();
+		// Listen for connections and start a new thread for each
+		
 			//Start p2pThread
 				//Transfer File
 			
 
 
-		if (socketToServer != null && out != null && in != null && authStatus == 1) {
+		if (socketToServer != null && out != null && in != null && authStatus == 1 && uploadPort != null) {
 			try {
 				uploadRFCIndexes();
 
-				handleConsoleCommands();
+				Runnable p2sThread = new PeerToServerThread();
+				new Thread(p2sThread).start();
+				
+				while(!done){
+					p2pSocket = uploadPort.accept();
+					Runnable p2pThread = new PeerToPeerThread(p2pSocket);
+					new Thread(p2pThread).start();
+				}
 				
 
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
-
+			
 		}
+		
+		
 		
 		// Close everything
 		try {
@@ -79,9 +92,9 @@ public class Peer {
 	}
 
 
-	private static void handleConsoleCommands() throws IOException{
+	public static void handleConsoleCommands() throws IOException{
 		while (true) {
-			System.out.print("Wait for input: ");
+			System.out.println("Waiting for input. Valid options are listall, lookup <RFC#>, get <RFC#> <Hostname> <Port#>, and quit");
 			String input = console.nextLine();
 			input = input.replaceAll("([\\n\\r]+\\s*)*$", "").toLowerCase();
 			System.out.println(input);
@@ -89,18 +102,58 @@ public class Peer {
 				int number = Integer.parseInt(input.split(" ")[1]);
 				String title = getTitle(number);
 				out.println(
-						"LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + socketToServer.getInetAddress()
+						"LOOKUP RFC " + number + " P2P-CI/1.0\nHost: " + inetAddress
 								+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 			} else if (input.startsWith("listall")) {
-				out.println("LIST ALL P2P-CI/1.0\nHost: " + socketToServer.getInetAddress() + "\nPort: "
+				out.println("LIST ALL P2P-CI/1.0\nHost: " + inetAddress + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
 			} else if (input.startsWith("quit")) {
-				out.println("QUIT P2P-CI/1.0\nHost: " + socketToServer.getInetAddress() + "\nPort: "
+				out.println("QUIT P2P-CI/1.0\nHost: " + inetAddress + "\nPort: "
 						+ uploadPort.getLocalPort() + "\n");
+				done = true;
 				break;
 			} else if (input.startsWith("get")) {
-				// communicate with another peer to get a rfc file here
-				// probably
+				int RFCNumber = Integer.parseInt(input.split(" ")[1]);
+				String peerHostname = input.split(" ")[2];
+				int peerUPort = Integer.parseInt(input.split(" ")[3]);
+				Socket socketToPeer = new Socket(peerHostname, peerUPort);
+				
+				BufferedReader pin = new BufferedReader(new InputStreamReader(socketToPeer.getInputStream()));
+				PrintStream pout = new PrintStream(socketToPeer.getOutputStream());
+				OutputStream fout = new FileOutputStream(new File("peer/rfc" + RFCNumber + ".txt"));
+				pout.println("GET RFC " + RFCNumber + " P2P-CI/1.0");
+				pout.println("Host: " + peerHostname);
+				pout.println("OS: " + System.getProperty("os.name"));
+				
+				
+				
+				//TODO this just echoes first 6 lines of p2p file transfer (maybe handle potential errors?)
+				String responseLine = "";
+				for (String line = pin.readLine(); !line.isEmpty(); line = pin.readLine()) {
+					responseLine += line + "\n";
+				}
+				System.out.println(responseLine);
+				
+				pin.close();
+				
+				// 
+				InputStream pin2 = socketToPeer.getInputStream();
+				byte[] bytes = new byte[16*1024];
+
+		        int count;
+		        while ((count = pin2.read(bytes)) > 0) {
+		            fout.write(bytes, 0, count);
+		        }
+		        
+		        pin2.close();
+				
+				
+				
+				socketToPeer.close();
+				fout.close();
+				
+				
+				
 			} else {
 				System.out.println("Wrong command, try again.");
 				continue;
@@ -132,6 +185,8 @@ public class Peer {
 		} catch (IOException e) {
 			System.err.println("Couldn't get I/O for the connection to:" + hostname);
 		}
+		
+		inetAddress = socketToServer.getLocalAddress().toString().replaceAll("/", "");
 
 		System.out.println("Connected to Server!");
 		System.out.println("------------------------");
@@ -151,7 +206,7 @@ public class Peer {
 			if (files[i].isFile()) {
 				int number = Integer.parseInt(files[i].getName().replaceAll("[^0-9]", ""));
 				String title = getTitle(number);
-				out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + socketToServer.getInetAddress()
+				out.println("ADD RFC " + number + " P2P-CI/1.0\nHost: " + inetAddress
 						+ "\nPort: " + uploadPort.getLocalPort() + "\nTitle: " + title + "\n");
 				String responseLine = "";
 				for (String line = in.readLine(); !line.isEmpty(); line = in.readLine()) {
