@@ -134,7 +134,6 @@ public class Peer {
 				}
 				System.out.println(responseLine);
 				
-				pin.close();
 				
 				// 
 				InputStream pin2 = socketToPeer.getInputStream();
@@ -147,7 +146,12 @@ public class Peer {
 		        
 		        pin2.close();
 				
-				
+		        responseLine = "";
+				for (String line = pin.readLine(); !line.isEmpty(); line = pin.readLine()) {
+					responseLine += line + "\n";
+				}
+				System.out.println(responseLine);
+				pin.close();
 				
 				socketToPeer.close();
 				fout.close();

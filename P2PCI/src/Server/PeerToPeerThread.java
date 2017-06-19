@@ -75,11 +75,16 @@ class PeerToPeerThread implements Runnable {
 					os = socket.getOutputStream();
 					int count;
 			        while ((count = in.read(bytes)) > 0) {
-			            out.write(bytes, 0, count);
+			            os.write(bytes, 0, count);
 			        }
-
+			        
 			        os.close();
 			        in.close();
+			        
+			        out.println("File sent");
+			        out.println();
+			        
+			        out.close();
 			        socket.close();
 			        
 				} else {
