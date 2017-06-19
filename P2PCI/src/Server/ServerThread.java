@@ -2,7 +2,13 @@ package Server;
 
 import java.io.*;
 import java.net.*;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
+
+import javax.crypto.*;
+import javax.crypto.spec.*;
 
 // Modified from example at https://stackoverflow.com/questions/10131377/socket-programming-multiple-client-to-one-server
 public class ServerThread implements Runnable {
@@ -11,13 +17,30 @@ public class ServerThread implements Runnable {
 	protected int clientPort;
 	
 	protected String version;
+	
+	protected String theKey = "yx31nyb071dj98s";
+	
+	protected static SecretKeySpec secretKey;
 
+	protected static byte[] key;
+	
 	public ServerThread(Socket clientSocket) {
 		this.socket = clientSocket;
 		version = "P2P-CI/1.0";
+		
+		//example from http://aesencryption.net/
+		try {
+			key = MessageDigest.getInstance("SHA-1").digest(theKey.getBytes("UTF-8"));
+			key = Arrays.copyOf(key, 16);
+			secretKey = new SecretKeySpec(key, "AES");
+		} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void run() {
+		
+		
 		InputStream in = null;
 		BufferedReader br = null;
 		PrintStream out = null;
@@ -41,7 +64,15 @@ public class ServerThread implements Runnable {
 				Scanner sc = new Scanner(command);
 				String method = sc.next();
 				sc.close();
-				if (method.equals("ADD")) {
+				if (method.equals("LOGIN")) {
+					if (login(command)) {
+						out.println("User authenticated\n");
+					} else {
+						out.println("Invalid User\n");
+						socket.close();
+						return;
+					}
+				} else if (method.equals("ADD")) {
 					RFC rfc = new RFC();
 					try {
 						rfc = add(command);
@@ -53,7 +84,14 @@ public class ServerThread implements Runnable {
 						continue;
 					}
 					out.println(version + "200 OK");
-					out.println(rfc.toString() + "\n");
+					int port = 0;
+					for (int i = 0; i < Server.ports.size(); i++) {
+						UPort p = Server.ports.get(i);
+						if (rfc.getHostname().equals(p.getHostname())) {
+							port = p.getPort();
+						}
+					}
+					out.println(rfc.toString() + " " + port + "\n");
 				} else if (method.equals("LOOKUP")) {
 					LinkedList<RFC> results = new LinkedList<RFC>();
 					try {
@@ -135,6 +173,38 @@ public class ServerThread implements Runnable {
 			System.out.println("IO Exception while reading lines " + e);
 			return;
 		}	
+	}
+
+	private boolean login(String msg) throws FileNotFoundException {
+		Scanner sc = new Scanner(msg);
+		Scanner first = new Scanner(sc.nextLine());
+		first.next();
+		String user = first.next();
+		String encoded = first.next();
+		first.close();
+		sc.close();
+		String decoded = "";
+		Cipher cipher;
+		try {
+			cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+			cipher.init(Cipher.DECRYPT_MODE, secretKey);
+			decoded = new String(cipher.doFinal(Base64.getDecoder().decode(encoded)));
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Scanner fs = new Scanner(new File("/Test/logins.txt"));
+		while(fs.hasNextLine()) {
+			Scanner ls = new Scanner(fs.nextLine());
+			if (user.equals(ls.next()) && decoded.equals(ls.next())) {
+				ls.close();
+				fs.close();
+				return true;
+			}
+			ls.close();
+		}
+		fs.close();
+		return false;
 	}
 
 	public RFC add(String msg) {
