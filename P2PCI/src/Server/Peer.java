@@ -101,7 +101,15 @@ public class Peer {
 			input = input.replaceAll("([\\n\\r]+\\s*)*$", "").toLowerCase();
 			System.out.println(input);
 			if (input.startsWith("lookup")) {
-				int number = Integer.parseInt(input.split(" ")[1]);
+				int number = 0;
+				try {
+					number = Integer.parseInt(input.split(" ")[1]);
+				} catch (Exception e) {
+					System.out.println(version + " 400 Bad Request");
+					System.out.println("Try again.");
+					System.out.println();
+					continue;
+				}
 				String title = getTitle(number);
 				out.println(
 						"LOOKUP RFC " + number + " " + version + "\nHost: " + inetAddress

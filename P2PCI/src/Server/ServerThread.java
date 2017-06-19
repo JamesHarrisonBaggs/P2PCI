@@ -120,7 +120,7 @@ public class ServerThread implements Runnable {
 						out.println(version + " 505 P2P-CI Version Not Supported\n");
 						continue;
 					}
-					out.println(version + "200 OK");
+					out.println(version + " 200 OK");
 					int port = 0;
 					out.println("Peers: ");
 					for (int i = 0; i < Server.ports.size(); i++) {
